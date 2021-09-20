@@ -9,6 +9,5 @@ find_package(fmt CONFIG REQUIRED)
 
 add_subdirectory(transmogrify)
 add_subdirectory(tests)
+add_subdirectory(example)
 
-add_executable(example example.cpp)
-target_link_libraries(example PRIVATE transmogrify fmt::fmt)
