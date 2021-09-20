@@ -2,8 +2,16 @@
 
 > Hook a `void(*)()` function by re-writing its assembly code at runtime.
 
-It currently only has support for overriding functions like the ones generated
-by my compiler version. You can only install one hook. See the `example.cpp`.
+Caveats:
+
+1. Only x86-64 code is supported.
+2. Only one hook can be installed.
+3. Only functions with a specific preamble can be hooked
+   ```
+   endbr64
+   push %rbp
+   mov %rsp, %rbp
+   ```
 
 # Build instructions
 
