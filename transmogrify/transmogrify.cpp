@@ -10,15 +10,26 @@
 #include <sys/mman.h>
 
 // Defined in the assembly code
-extern void* assembly_stub;
+extern void* assembly_stub_1;
+extern void* assembly_stub_2;
+extern void* assembly_stub_3;
+extern void* assembly_stub_4;
 
-void *transmogrify_return; // needed for jumping back
-void *transmogrify_hook;
+void *assembly_stubs[] = {
+    &assembly_stub_1,
+    &assembly_stub_2,
+    &assembly_stub_3,
+    &assembly_stub_4,
+};
 
+void *transmogrify_returns[4];
+void *transmogrify_hooks[4];
 
 namespace transmogrify {
 
 namespace {
+
+int hooks_installed = 0;
 
 int get_page_size()
 {
@@ -106,6 +117,11 @@ bool hook_with_jump_to_stub(void_function target, void* stub)
 bool hook(void_function target,
           void_function hook)
 {
+    if (hooks_installed >= 4) {
+        // only 4 hooks are supported
+        return false;
+    }
+
     if (!mark_memory_page_as_writable(target))
     {
         fmt::print("couldn't mark memory as writable\n");
@@ -118,13 +134,17 @@ bool hook(void_function target,
         return false;
     }
 
-    if (!hook_with_jump_to_stub(target, &assembly_stub))
+    if (!hook_with_jump_to_stub(target, assembly_stubs[hooks_installed]))
     {
         return false;
     }
+    
+    transmogrify_hooks[hooks_installed] =
+        as_void_ptr(hook);
+    transmogrify_returns[hooks_installed] =
+        (char*)as_void_ptr(target) + overridable_preamble.size();
 
-    transmogrify_hook = as_void_ptr(hook);
-    transmogrify_return = (char*)as_void_ptr(target) + overridable_preamble.size();
+    hooks_installed++;
 
     return true;
 }
